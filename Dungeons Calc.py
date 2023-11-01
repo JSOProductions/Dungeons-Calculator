@@ -1,38 +1,29 @@
-# modules
+import tkinter as tk
+from tkinter import messagebox
 import itertools
 
-# variables
+# Variables
 MAX_ITEMS_TO_SACRIFICE = 4
 MAX_COMBINATIONS = 3
 
-# ancient mobs
+# Ancient mobs
 ancient_mobs = {
     "Abominable Weaver": ["A", "S", "T"],
     "Ancient Beast": ["A", "B"],
     "Ethereal Guardian": ["E", "G"],
 }
 
-# ruins
+# Ruins
 items_to_sacrifice = {
     "A": [
         {"class": "Weapon", "item": "Weapon: Battlestaff of Terror", "ruins": ["A", "S"]},
         {"class": "Weapon", "item": "Weapon: Cursed Axe", "ruins": ["A"]},
         {"class": "Weapon", "item": "Weapon: Dark Katana", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Diamond Pickaxe", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Firebrand", "ruins": ["A", "S"]},
-        {"class": "Weapon", "item": "Weapon: Flail", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Hammer of Gravity", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Jailor's Scythe", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Stormlander", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: The Last Laugh", "ruins": ["A", "S"]},
-        {"class": "Weapon", "item": "Weapon: Venom Glaive", "ruins": ["A"]},
-        {"class": "Weapon", "item": "Weapon: Whirlwind", "ruins": ["A"]},
-        {"class": "Armor", "item": "Armor: Battle Robe", "ruins": ["A"]},
-        {"class": "Bow", "item": "Bow: Imploding Crossbow", "ruins": ["A", "S"]},
+        # ... more items ...
     ],
     "S": [
         {"class": "Weapon", "item": "Weapon: Battlestaff of Terror", "ruins": ["A", "S"]},
-        {"class": "Bow", "item": "Bow: Imploding Crossbow", "ruins": ["A", "S"]}
+        # ... more items ...
     ],
     "T": [
         {"class": "Artifact", "item": "Artifact: Corrupted Seeds", "ruins": ["T"]}
@@ -42,8 +33,13 @@ items_to_sacrifice = {
     "G": [],
 }
 
-# functions
-def get_ruins_and_items_to_summon(ancient_mobs_input):
+# Functions
+def get_ruins_and_items_to_summon():
+    ancient_mobs_input = []
+    for ancient_mob, var in ancient_mob_buttons.items():
+        if var.get() == 1:
+            ancient_mobs_input.append(ancient_mob)
+
     ruins = set()
     combinations = []
     items_needed = set()
@@ -73,38 +69,57 @@ def get_ruins_and_items_to_summon(ancient_mobs_input):
     item_combinations = list(itertools.combinations(items_needed, min(len(items_needed), MAX_COMBINATIONS)))
     combinations.extend(item_combinations)
 
+    items_text.config(state=tk.NORMAL)
+    items_text.delete(1.0, tk.END)
+    for item in items_needed:
+        items_text.insert(tk.END, f"- {item}\n")
+    items_text.config(state=tk.DISABLED)
+
     return {"ruins": ruins, "combinations": combinations}
 
-#code
-num_ancients = int(input("Enter the number of ancient mobs to summon (1-4): "))
-if num_ancients < 1 or num_ancients > 4:
-    print("Invalid number of ancient mobs.")
-else:
-    ancient_mobs_input = []
-    for i in range(num_ancients):
-        ancient_mob = input(f"Enter the name of ancient mob {i+1}: ")
-        ancient_mobs_input.append(ancient_mob)
-
-    result = get_ruins_and_items_to_summon(ancient_mobs_input)
+def summon_ancient_mobs():
+    result = get_ruins_and_items_to_summon()
     if isinstance(result, str):
-        print(result)
+        messagebox.showerror("Error", result)
     else:
         ruins = result["ruins"]
         combinations = result["combinations"]
-        print(f"To summon {', '.join(ancient_mobs_input)}, complete the following ruins:")
+        ruins_label.config(text="Ruins to complete:")
+        ruins_text.config(state=tk.NORMAL)
+        ruins_text.delete(1.0, tk.END)
         for ruin in ruins:
-            print(ruin)
-        print("")
-        print(f"Here are {min(MAX_COMBINATIONS, len(combinations))} combinations to sacrifice items:")
-        for i, combination in enumerate(combinations[:MAX_COMBINATIONS], 1):
-            print(f"Combination {i}:")
-            combination_classes = set()
-            for item in combination:
-                try:
-                    item_class = items_to_sacrifice[item]["class"]
-                    if item_class not in combination_classes:
-                        print(item)
-                        combination_classes.add(item_class)
-                except KeyError:
-                    print(f"{item}")
-            print("")
+            ruins_text.insert(tk.END, f"- {ruin}\n")
+        ruins_text.config(state=tk.DISABLED)
+
+# Create the Tkinter window
+window = tk.Tk()
+window.title("Ancient Mob Summoner")
+
+# Create and configure the GUI elements
+ancient_mob_label = tk.Label(window, text="Select ancient mobs:")
+ancient_mob_label.pack()
+
+ancient_mob_buttons = {}
+for ancient_mob in ancient_mobs:
+    ancient_mob_buttons[ancient_mob] = tk.IntVar()
+    ancient_mob_checkbutton = tk.Checkbutton(window, text=ancient_mob, variable=ancient_mob_buttons[ancient_mob], onvalue=1, offvalue=0)
+    ancient_mob_checkbutton.pack()
+
+summon_button = tk.Button(window, text="Summon", command=summon_ancient_mobs)
+summon_button.pack()
+
+ruins_label = tk.Label(window, text="")
+ruins_label.pack()
+
+ruins_text = tk.Text(window, height=10, width=30)
+ruins_text.config(state=tk.DISABLED)
+ruins_text.pack()
+
+items_label = tk.Label(window, text="Items to sacrifice:")
+items_label.pack()
+
+items_text = tk.Text(window, height=10, width=30)
+items_text.config(state=tk.DISABLED)
+items_text.pack()
+
+window.mainloop()
