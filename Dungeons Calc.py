@@ -5,12 +5,14 @@ import itertools
 # Variables
 MAX_ITEMS_TO_SACRIFICE = 4
 MAX_COMBINATIONS = 3
+combinations = []
+combination_index = 0
 
 # Ancient mobs
 ancient_mobs = {
-    "Abominable Weaver": ["A", "S", "T"],
-    "Ancient Beast": ["A", "B"],
-    "Ethereal Guardian": ["E", "G"],
+    "Abominable Weaver": [["A", "S", "T"], [2, 1, 1]],
+    "Ancient Beast": [["A", "B"], [1, 2]],
+    "Ethereal Guardian": [["E", "G"], [1, 1]],
 }
 
 # Ruins
@@ -35,6 +37,8 @@ items_to_sacrifice = {
 
 # Functions
 def get_ruins_and_items_to_summon():
+    global combinations, combination_index  # Declare combinations and combination_index as global variables
+
     ancient_mobs_input = []
     for ancient_mob, var in ancient_mob_buttons.items():
         if var.get() == 1:
@@ -47,9 +51,9 @@ def get_ruins_and_items_to_summon():
 
     for ancient_mob in ancient_mobs_input:
         if ancient_mob in ancient_mobs:
-            mob_ruins = ancient_mobs[ancient_mob]
+            mob_ruins, mob_counts = ancient_mobs[ancient_mob]
             ruins.update(mob_ruins)
-            for ruin in mob_ruins:
+            for ruin, count in zip(mob_ruins, mob_counts):
                 if ruin in items_to_sacrifice:
                     rune_items = items_to_sacrifice[ruin]
                     for item_data in rune_items:
@@ -58,7 +62,7 @@ def get_ruins_and_items_to_summon():
                         ruins_required = item_data["ruins"]
                         if all(ruin in ruins for ruin in ruins_required):
                             if item_class not in item_classes:
-                                items_needed.add(item)
+                                items_needed.add((item, count))
                                 item_classes.add(item_class)
                 else:
                     print(f"No items found for rune '{ruin}'")
@@ -68,11 +72,12 @@ def get_ruins_and_items_to_summon():
     items_needed = list(items_needed)[:MAX_ITEMS_TO_SACRIFICE]
     item_combinations = list(itertools.combinations(items_needed, min(len(items_needed), MAX_COMBINATIONS)))
     combinations.extend(item_combinations)
+    combination_index = 0
 
     items_text.config(state=tk.NORMAL)
     items_text.delete(1.0, tk.END)
-    for item in items_needed:
-        items_text.insert(tk.END, f"- {item}\n")
+    for item, count in items_needed:
+        items_text.insert(tk.END, f"- {item} (x{count})\n")
     items_text.config(state=tk.DISABLED)
 
     return {"ruins": ruins, "combinations": combinations}
@@ -91,35 +96,20 @@ def summon_ancient_mobs():
             ruins_text.insert(tk.END, f"- {ruin}\n")
         ruins_text.config(state=tk.DISABLED)
 
-# Create the Tkinter window
-window = tk.Tk()
-window.title("Ancient Mob Summoner")
+        # Remove the "Next" button if there are no more combinations
+        if not combinations:
+            next_button.config(state=tk.DISABLED)
+        else:
+            next_button.config(state=tk.NORMAL)
+            show_next_combination()
 
-# Create and configure the GUI elements
-ancient_mob_label = tk.Label(window, text="Select ancient mobs:")
-ancient_mob_label.pack()
-
-ancient_mob_buttons = {}
-for ancient_mob in ancient_mobs:
-    ancient_mob_buttons[ancient_mob] = tk.IntVar()
-    ancient_mob_checkbutton = tk.Checkbutton(window, text=ancient_mob, variable=ancient_mob_buttons[ancient_mob], onvalue=1, offvalue=0)
-    ancient_mob_checkbutton.pack()
-
-summon_button = tk.Button(window, text="Summon", command=summon_ancient_mobs)
-summon_button.pack()
-
-ruins_label = tk.Label(window, text="")
-ruins_label.pack()
-
-ruins_text = tk.Text(window, height=10, width=30)
-ruins_text.config(state=tk.DISABLED)
-ruins_text.pack()
-
-items_label = tk.Label(window, text="Items to sacrifice:")
-items_label.pack()
-
-items_text = tk.Text(window, height=10, width=30)
-items_text.config(state=tk.DISABLED)
-items_text.pack()
-
-window.mainloop()
+def show_next_combination():
+    global combination_index  # Declare combination_index as a global variable
+    if combinations:
+        combination = combinations[combination_index]
+        combination_index = (combination_index + 1) % len(combinations)
+        combination_text.config(state=tk.NORMAL)
+        combination_text.delete(1.0, tk.END)
+        for item, count in combination:
+            combination_text.insert(tk.END, f"- {item} (x{count})\n")
+        combination_text.config(state=tk.DISApologies, but it seems like the code snippet got truncated. Could you please provide the complete code so that I can assist you with modifying it accordingly?
